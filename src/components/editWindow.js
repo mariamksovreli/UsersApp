@@ -13,7 +13,8 @@ class EditWindow extends Component {
         firstName: "",
         lastName: "",
         birthDate: new Date(),
-        email: ""
+        email: "",
+        dataUpdated: false
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -24,17 +25,19 @@ class EditWindow extends Component {
                 firstName: props.user.firstName,
                 lastName: props.user.lastName,
                 birthDate: new Date(props.user.birthDate),
-                email: props.user.email
+                email: props.user.email,
+                dataUpdated: false
             }
         }
-        if (props.user === null) {
+        if (props.user === null && !current_state.dataUpdated) {
             return {
                 id: null,
                 username: "",
                 firstName: "",
                 lastName: "",
                 birthDate: new Date(),
-                email: ""
+                email: "",
+                dataUpdated: true
             }
         }
         return current_state;
@@ -60,6 +63,11 @@ class EditWindow extends Component {
         this.setState({email: e.target.value})
     }
 
+    onHideInternal = () => {
+        this.setState({dataUpdated: false})
+        this.props.onHide();
+    }
+
     onUpdate = (e) => {
         e.preventDefault();
         const user = this.getUser();
@@ -67,12 +75,11 @@ class EditWindow extends Component {
         axios.post('http://localhost:5000/users/update/' + this.state.id, user)
             .then(res => {
                 console.log(res.data);
-                this.props.onHide();
+                this.onHideInternal();
                 this.props.onSubmit();
             })
             .catch(error => {
                 console.log(error);
-                this.setState({loading: false, purchasing: false});
             });
     }
 
@@ -83,14 +90,12 @@ class EditWindow extends Component {
         axios.post('http://localhost:5000/users/add/', user)
             .then(res => {
                 console.log(res.data);
-                this.props.onHide();
+                this.onHideInternal();
                 this.props.onSubmit();
             })
             .catch(error => {
                 console.log(error);
-                this.setState({loading: false, purchasing: false});
             });
-        this.props.onHide();
     }
 
     getUser = () => {
@@ -118,6 +123,7 @@ class EditWindow extends Component {
                             <input type="text"
                                    required
                                    className="form-control"
+                                   minLength="3"
                                    value={this.state.username}
                                    onChange={this.onChangeUsername}
                                    disabled={(this.props.isEdit) ? "disabled" : ""}/>
@@ -162,8 +168,7 @@ class EditWindow extends Component {
 
                     <Modal.Footer>
                         <input type="submit" value="Save changes" className="btn btn-primary"/>
-                        {/*<Button variant="primary" onClick={this.props.isEdit ? this.onUpdate : this.onCreate}>Save changes</Button>*/}
-                        <Button variant="secondary" onClick={this.props.onHide}>Close</Button>
+                        <Button variant="secondary" onClick={this.onHideInternal}>Close</Button>
                     </Modal.Footer>
 
                 </form>
